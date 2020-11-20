@@ -11,6 +11,7 @@ export default class Assignee extends React.Component {
       assigneeUsername,
       inEditMode: false,
       newAssigneeUsername: null,
+      alertWatched: false,
     };
   }
 
@@ -89,9 +90,36 @@ export default class Assignee extends React.Component {
     return { nickname, placeholder };
   };
 
+  toggleAlertWatched = async () => {
+    const { alertWatched } = this.state;
+    if (alertWatched) {
+      this.setState({ alertWatched: false });
+      return;
+    }
+    if (!('Notification' in window)) {
+      return;
+    }
+    let watchAlert = false;
+    if (Notification.permission === 'granted') {
+      watchAlert = true;
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          watchAlert = true;
+        }
+      });
+    }
+    this.setState({ alertWatched: watchAlert });
+  };
+
   render() {
     const { user } = this.props;
-    const { assigneeUsername, newAssigneeUsername, inEditMode } = this.state;
+    const {
+      assigneeUsername,
+      newAssigneeUsername,
+      inEditMode,
+      alertWatched,
+    } = this.state;
 
     const { nickname, placeholder } = this.extractNicknameAndPlaceholder(
       assigneeUsername,
@@ -119,6 +147,14 @@ export default class Assignee extends React.Component {
             Take
           </Button>
         )}
+        <Button
+          className="ml-1"
+          color="darker-secondary"
+          size="xs"
+          onClick={this.toggleAlertWatched}
+        >
+          {alertWatched ? 'watched' : ' not watched'}
+        </Button>
       </React.Fragment>
     ) : (
       <InputGroup size="sm">

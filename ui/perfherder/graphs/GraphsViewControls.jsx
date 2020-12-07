@@ -14,11 +14,12 @@ import { faTable, faChartArea } from '@fortawesome/free-solid-svg-icons';
 
 import { phTimeRanges } from '../constants';
 import DropdownMenuItems from '../../shared/DropdownMenuItems';
+import withSize from '../../shared/WithSize';
 
 import TestDataModal from './TestDataModal';
 import GraphsContainer from './GraphsContainer';
 
-export default class GraphsViewControls extends React.Component {
+class GraphsViewControls extends React.Component {
   changeHighlightedRevision = (index, newValue) => {
     const { highlightedRevisions, updateStateParams } = this.props;
 
@@ -60,7 +61,7 @@ export default class GraphsViewControls extends React.Component {
           plottedUnits={measurementUnits}
           {...this.props}
         />
-        <Row className="pb-3 max-width-default mx-auto">
+        <Row className={`pb-3 mx-auto ${showTable ? 'max-width-default' : ''}`}>
           {!hasNoData && (
             <Col sm="auto" className="pl-0 py-2 pr-3">
               <Button color="darker-info" onClick={toggleTableView}>
@@ -113,7 +114,11 @@ export default class GraphsViewControls extends React.Component {
               />
             )}
 
-            <Row className="justify-content-start pt-2 pb-5 max-width-default mx-auto">
+            <Row
+              className={`justify-content-start pt-2 pb-5 mx-auto ${
+                showTable ? 'max-width-default' : ''
+              }`}
+            >
               {highlightedRevisions.length > 0 &&
                 highlightedRevisions.map((revision, index) => (
                   // eslint-disable-next-line react/no-array-index-key
@@ -172,6 +177,9 @@ GraphsViewControls.propTypes = {
   testData: PropTypes.arrayOf(PropTypes.shape({})),
   showModal: PropTypes.bool,
   toggle: PropTypes.func.isRequired,
+  // Injected by the WithSize component:
+  width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
 };
 
 GraphsViewControls.defaultProps = {
@@ -179,3 +187,5 @@ GraphsViewControls.defaultProps = {
   testData: [],
   showModal: false,
 };
+
+export default withSize(GraphsViewControls);

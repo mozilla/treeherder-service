@@ -17,6 +17,8 @@ import RepositoryModel from '../../models/repository';
 import { displayNumber, getStatus } from '../helpers';
 import Clipboard from '../../shared/Clipboard';
 
+const TOOLTIP_WIDTH = 280;
+
 const GraphTooltip = ({
   testData,
   user,
@@ -28,7 +30,7 @@ const GraphTooltip = ({
   datum,
   x,
   y,
-  windowWidth,
+  graphWidth,
 }) => {
   const testDetails = testData.find(
     (item) => item.signature_id === datum.signature_id,
@@ -138,152 +140,175 @@ const GraphTooltip = ({
     );
   };
 
-  const verticalOffset = 15;
-  const horizontalOffset = x >= 1275 && windowWidth <= 1825 ? 100 : 0;
-  const centered = {
-    x: x - 280 / 2 - horizontalOffset,
-    y: y - (186 + verticalOffset),
-  };
+  // Ensure the tooltip does not leave the graph.
+  let tooltipLeft = x - TOOLTIP_WIDTH / 2;
+  const tooltipRight = x + TOOLTIP_WIDTH / 2;
+  let arrowOffset = 0;
+  if (tooltipRight > graphWidth) {
+    // The tooltip is off the right of the container.
+    arrowOffset = tooltipRight - graphWidth;
+    tooltipLeft -= arrowOffset;
+  }
+  if (tooltipLeft < 0) {
+    // The tooltip is off the left of the container.
+    arrowOffset = tooltipLeft;
+    tooltipLeft = 0;
+  }
+
+  // const tooltipTop = y - 201;
+  const tooltipTop = y;
 
   return (
-    <foreignObject width="100%" height="100%" x={centered.x} y={centered.y}>
+    <foreignObject
+      width="100%"
+      height="100%"
+      className="graph-tooltip-foreign-object"
+    >
       <div
-        className={`graph-tooltip ${lockTooltip ? 'locked' : null}`}
-        xmlns="http://www.w3.org/1999/xhtml"
-        data-testid="graphTooltip"
+        className="graph-tooltip-positioner"
+        style={{
+          left: tooltipLeft,
+          top: tooltipTop,
+        }}
       >
-        <Button
-          outline
-          color="secondary"
-          className="close mr-3 my-2 ml-2"
-          onClick={closeTooltip}
+        <div
+          className={`graph-tooltip ${lockTooltip ? 'locked' : null}`}
+          xmlns="http://www.w3.org/1999/xhtml"
+          data-testid="graphTooltip"
         >
-          <FontAwesomeIcon
-            className="pointer text-white"
-            icon={faTimes}
-            size="xs"
-            title="close tooltip"
-          />
-        </Button>
-        <div className="body">
-          <div>
-            <p data-testid="repoName">({testDetails.repository_name})</p>
-            <p className="small" data-testid="platform">
-              {testDetails.platform}
-            </p>
-          </div>
-          <div>
-            <p>
-              {displayNumber(value)}
-              {testDetails.measurementUnit && (
-                <span> {testDetails.measurementUnit}</span>
-              )}
-              <span className="text-muted">
-                {testDetails.lowerIsBetter
-                  ? ' (lower is better)'
-                  : ' (higher is better)'}
-              </span>
-            </p>
-            <p className="small">
-              &Delta; {displayNumber(deltaValue.toFixed(1))} (
-              {(100 * deltaPercent).toFixed(1)}%)
-            </p>
-          </div>
-
-          <div>
-            <span>
-              <a href={pushUrl} target="_blank" rel="noopener noreferrer">
-                {dataPointDetails.revision.slice(0, 13)}
-              </a>{' '}
-              {(dataPointDetails.jobId || prevRevision) && '('}
-              {dataPointDetails.jobId && (
-                <a href={jobsUrl} target="_blank" rel="noopener noreferrer">
-                  job
-                </a>
-              )}
-              {dataPointDetails.jobId && prevRevision && ', '}
-              {prevRevision && (
-                <a
-                  href={`./comparesubtest${createQueryParams({
-                    originalProject: testDetails.repository_name,
-                    newProject: testDetails.repository_name,
-                    originalRevision: prevRevision,
-                    newRevision: dataPointDetails.revision,
-                    originalSignature:
-                      testDetails.parentSignature || testDetails.signature_id,
-                    newSignature:
-                      testDetails.parentSignature || testDetails.signature_id,
-                    framework: testDetails.framework_id,
-                  })}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  compare
-                </a>
-              )}
-              {(dataPointDetails.jobId || prevRevision) && ') '}
-              <Clipboard
-                text={dataPointDetails.revision}
-                description="Revision"
-                outline
-              />
-            </span>
-            {dataPointDetails.alertSummary && (
+          <Button
+            outline
+            color="secondary"
+            className="close mr-3 my-2 ml-2"
+            onClick={closeTooltip}
+          >
+            <FontAwesomeIcon
+              className="pointer text-white"
+              icon={faTimes}
+              size="xs"
+              title="close tooltip"
+            />
+          </Button>
+          <div className="body">
+            <div>
+              <p data-testid="repoName">({testDetails.repository_name})</p>
+              <p className="small" data-testid="platform">
+                {testDetails.platform}
+              </p>
+            </div>
+            <div>
               <p>
-                <Link to={`./alerts?id=${dataPointDetails.alertSummary.id}`}>
-                  <FontAwesomeIcon
-                    className="text-warning"
-                    icon={faExclamationCircle}
-                    size="sm"
-                  />
-                  {` Alert # ${dataPointDetails.alertSummary.id}`}
-                </Link>
+                {displayNumber(value)}
+                {testDetails.measurementUnit && (
+                  <span> {testDetails.measurementUnit}</span>
+                )}
                 <span className="text-muted">
-                  {` - ${alertStatus} `}
-                  {alert && alert.related_summary_id && (
-                    <span>
-                      {alert.related_summary_id !==
-                      dataPointDetails.alertSummary.id
-                        ? 'to'
-                        : 'from'}
-                      <Link
-                        to={`./alerts?id=${alert.related_summary_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >{` alert # ${alert.related_summary_id}`}</Link>
-                    </span>
-                  )}
+                  {testDetails.lowerIsBetter
+                    ? ' (lower is better)'
+                    : ' (higher is better)'}
                 </span>
               </p>
-            )}
-            {!dataPointDetails.alertSummary && prevPushId && (
-              <p className="pt-2">
-                {user.isStaff ? (
-                  <Button
-                    color="darker-info"
-                    outline
-                    size="sm"
-                    onClick={createAlert}
-                  >
-                    create alert
-                  </Button>
-                ) : (
-                  <span>(log in as a a sheriff to create)</span>
-                )}
+              <p className="small">
+                &Delta; {displayNumber(deltaValue.toFixed(1))} (
+                {(100 * deltaPercent).toFixed(1)}%)
               </p>
-            )}
-            <p className="small text-white pt-2">{`${moment
-              .utc(dataPointDetails.x)
-              .format('MMM DD hh:mm:ss')} UTC`}</p>
-            {Boolean(retriggerNum) && (
-              <p className="small">{`Retriggers: ${retriggerNum}`}</p>
-            )}
+            </div>
+
+            <div>
+              <span>
+                <a href={pushUrl} target="_blank" rel="noopener noreferrer">
+                  {dataPointDetails.revision.slice(0, 13)}
+                </a>{' '}
+                {(dataPointDetails.jobId || prevRevision) && '('}
+                {dataPointDetails.jobId && (
+                  <a href={jobsUrl} target="_blank" rel="noopener noreferrer">
+                    job
+                  </a>
+                )}
+                {dataPointDetails.jobId && prevRevision && ', '}
+                {prevRevision && (
+                  <a
+                    href={`./comparesubtest${createQueryParams({
+                      originalProject: testDetails.repository_name,
+                      newProject: testDetails.repository_name,
+                      originalRevision: prevRevision,
+                      newRevision: dataPointDetails.revision,
+                      originalSignature:
+                        testDetails.parentSignature || testDetails.signature_id,
+                      newSignature:
+                        testDetails.parentSignature || testDetails.signature_id,
+                      framework: testDetails.framework_id,
+                    })}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    compare
+                  </a>
+                )}
+                {(dataPointDetails.jobId || prevRevision) && ') '}
+                <Clipboard
+                  text={dataPointDetails.revision}
+                  description="Revision"
+                  outline
+                />
+              </span>
+              {dataPointDetails.alertSummary && (
+                <p>
+                  <Link to={`./alerts?id=${dataPointDetails.alertSummary.id}`}>
+                    <FontAwesomeIcon
+                      className="text-warning"
+                      icon={faExclamationCircle}
+                      size="sm"
+                    />
+                    {` Alert # ${dataPointDetails.alertSummary.id}`}
+                  </Link>
+                  <span className="text-muted">
+                    {` - ${alertStatus} `}
+                    {alert && alert.related_summary_id && (
+                      <span>
+                        {alert.related_summary_id !==
+                        dataPointDetails.alertSummary.id
+                          ? 'to'
+                          : 'from'}
+                        <Link
+                          to={`./alerts?id=${alert.related_summary_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >{` alert # ${alert.related_summary_id}`}</Link>
+                      </span>
+                    )}
+                  </span>
+                </p>
+              )}
+              {!dataPointDetails.alertSummary && prevPushId && (
+                <p className="pt-2">
+                  {user.isStaff ? (
+                    <Button
+                      color="darker-info"
+                      outline
+                      size="sm"
+                      onClick={createAlert}
+                    >
+                      create alert
+                    </Button>
+                  ) : (
+                    <span>(log in as a a sheriff to create)</span>
+                  )}
+                </p>
+              )}
+              <p className="small text-white pt-2">{`${moment
+                .utc(dataPointDetails.x)
+                .format('MMM DD hh:mm:ss')} UTC`}</p>
+              {Boolean(retriggerNum) && (
+                <p className="small">{`Retriggers: ${retriggerNum}`}</p>
+              )}
+            </div>
           </div>
+          <div
+            className="tip"
+            style={{ left: TOOLTIP_WIDTH / 2 + arrowOffset }}
+          />
         </div>
-        <div
-          className="tip"
-          style={{ transform: `translateX(${horizontalOffset}px)` }}
-        />
       </div>
     </foreignObject>
   );
@@ -295,6 +320,7 @@ GraphTooltip.propTypes = {
   user: PropTypes.shape({}).isRequired,
   updateData: PropTypes.func.isRequired,
   projects: PropTypes.arrayOf(PropTypes.shape({})),
+  graphWidth: PropTypes.number.isRequired,
 };
 
 GraphTooltip.defaultProps = {

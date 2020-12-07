@@ -384,43 +384,50 @@ class GraphsView extends React.Component {
                 testData.length ? 'custom-col-xxl-auto' : 'col-auto'
               } ${showTable && 'w-100'}`}
             >
-              <GraphsViewControls
-                colors={colors}
-                symbols={symbols}
-                timeRange={timeRange}
-                frameworks={frameworks}
-                user={user}
-                projects={projects}
-                options={options}
-                getTestData={this.getTestData}
-                testData={testData}
-                showModal={showModal}
-                showTable={showTable}
-                highlightAlerts={highlightAlerts}
-                highlightedRevisions={highlightedRevisions}
-                zoom={zoom}
-                selectedDataPoint={selectedDataPoint}
-                updateStateParams={(state) =>
-                  this.setState(state, this.changeParams)
-                }
-                visibilityChanged={visibilityChanged}
-                updateData={this.updateData}
-                toggle={() => this.setState({ showModal: !showModal })}
-                toggleTableView={() => this.setState({ showTable: !showTable })}
-                updateTimeRange={(timeRange) =>
-                  this.setState(
-                    {
-                      timeRange,
-                      zoom: {},
-                      selectedDataPoint: null,
-                      colors: [...graphColors],
-                      symbols: [...graphSymbols],
-                    },
-                    this.getTestData,
-                  )
-                }
-                hasNoData={!testData.length && !loading}
-              />
+              {/* Only render the view controls when we're not loading. Otherwise
+               the WithSize component provides the wrong sizing information. */}
+              {!loading && (
+                <GraphsViewControls
+                  key={loading ? 'loading' : 'done'}
+                  colors={colors}
+                  symbols={symbols}
+                  timeRange={timeRange}
+                  frameworks={frameworks}
+                  user={user}
+                  projects={projects}
+                  options={options}
+                  getTestData={this.getTestData}
+                  testData={testData}
+                  showModal={showModal}
+                  showTable={showTable}
+                  highlightAlerts={highlightAlerts}
+                  highlightedRevisions={highlightedRevisions}
+                  zoom={zoom}
+                  selectedDataPoint={selectedDataPoint}
+                  updateStateParams={(state) =>
+                    this.setState(state, this.changeParams)
+                  }
+                  visibilityChanged={visibilityChanged}
+                  updateData={this.updateData}
+                  toggle={() => this.setState({ showModal: !showModal })}
+                  toggleTableView={() =>
+                    this.setState({ showTable: !showTable })
+                  }
+                  updateTimeRange={(timeRange) =>
+                    this.setState(
+                      {
+                        timeRange,
+                        zoom: {},
+                        selectedDataPoint: null,
+                        colors: [...graphColors],
+                        symbols: [...graphSymbols],
+                      },
+                      this.getTestData,
+                    )
+                  }
+                  hasNoData={!testData.length && !loading}
+                />
+              )}
             </Col>
           </Row>
         </Container>

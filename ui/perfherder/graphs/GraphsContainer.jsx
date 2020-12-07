@@ -42,7 +42,6 @@ class GraphsContainer extends React.Component {
       zoomDomain,
       lockTooltip: false,
       externalMutation: undefined,
-      width: window.innerWidth,
     };
   }
 
@@ -54,7 +53,6 @@ class GraphsContainer extends React.Component {
     if (selectedDataPoint) this.verifySelectedDataPoint();
     window.addEventListener('resize', () =>
       this.setState({
-        width: window.innerWidth,
         zoomDomain,
       }),
     );
@@ -322,14 +320,19 @@ class GraphsContainer extends React.Component {
   };
 
   render() {
-    const { testData, showTable, zoom, highlightedRevisions } = this.props;
+    const {
+      testData,
+      showTable,
+      zoom,
+      highlightedRevisions,
+      width,
+    } = this.props;
     const {
       highlights,
       scatterPlotData,
       zoomDomain,
       lockTooltip,
       externalMutation,
-      width,
     } = this.state;
 
     const yAxisLabel = this.computeYAxisLabel();
@@ -356,16 +359,18 @@ class GraphsContainer extends React.Component {
     const today = moment.utc().toDate();
 
     return (
-      <span data-testid="graphContainer">
+      <div data-testid="graphContainer">
         {!showTable && (
           <React.Fragment>
             <Row>
-              <Col className="p-0 col-md-auto">
+              <Col className="p-0">
                 <VictoryChart
                   padding={chartPadding}
-                  width={1350}
+                  width={width}
                   height={150}
-                  style={{ parent: { maxHeight: '150px', maxWidth: '1350px' } }}
+                  style={{
+                    parent: { maxHeight: '150px' },
+                  }}
                   scale={{ x: 'time', y: 'linear' }}
                   domainPadding={{ y: 30 }}
                   maxDomain={{ x: today }}
@@ -404,12 +409,12 @@ class GraphsContainer extends React.Component {
             </Row>
 
             <Row>
-              <Col className="p-0 col-md-auto">
+              <Col className="p-0">
                 <VictoryChart
                   padding={chartPadding}
-                  width={1350}
+                  width={width}
                   height={400}
-                  style={{ parent: { maxHeight: '400px', maxWidth: '1350px' } }}
+                  style={{ parent: { maxHeight: '400px' } }}
                   scale={{ x: 'time', y: 'linear' }}
                   domainPadding={{ y: 40, x: [10, 10] }}
                   minDomain={{ x: zoomDomain.minX, y: zoomDomain.minY }}
@@ -520,7 +525,7 @@ class GraphsContainer extends React.Component {
                             <GraphTooltip
                               lockTooltip={lockTooltip}
                               closeTooltip={this.closeTooltip}
-                              windowWidth={width}
+                              graphWidth={width}
                               {...this.props}
                             />
                           </VictoryPortal>
@@ -554,7 +559,7 @@ class GraphsContainer extends React.Component {
             <TableView testData={testData} {...this.props} />
           </Row>
         )}
-      </span>
+      </div>
     );
   }
 }
@@ -571,6 +576,8 @@ GraphsContainer.propTypes = {
     PropTypes.arrayOf(PropTypes.string),
   ]),
   timeRange: PropTypes.shape({}).isRequired,
+  width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
 };
 
 GraphsContainer.defaultProps = {

@@ -1,0 +1,26 @@
+[
+  {
+    "pk": 1,
+    "model": "model.repositorygroup",
+    "fields": {
+      "name": "development",
+      "description": "Collection of repositories where code initially lands in the development process"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "model.repositorygroup",
+    "fields": {
+      "name": "release-stabilization",
+      "description": "Collection of repositories further along the release process"
+    }
+  },
+  {
+    "pk": 8,
+    "model": "model.repositorygroup",
+    "fields": {
+      "name": "comm-repositories",
+      "description": "Repositories for Seamonkey/Thunderbird development"
+    }
+  }
+]

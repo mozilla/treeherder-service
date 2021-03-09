@@ -1,0 +1,12 @@
+{
+  "AUTHORS": ["mozilla.org", "Licensing"],
+  "browser/components/BrowserGlue.jsm": ["Firefox", "General"],
+  "toolkit/mozilla-beta/fantasy_file.js": [
+    "Mock",
+    "File first seen on mozilla-beta"
+  ],
+  "testing/web-platform/tests/IndexedDB/historical.html": [
+    "Core",
+    "DOM: Core & HTML"
+  ]
+}

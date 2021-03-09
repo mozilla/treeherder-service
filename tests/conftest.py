@@ -11,6 +11,7 @@ import pytest
 import responses
 from _pytest.monkeypatch import MonkeyPatch
 from django.conf import settings
+from django.core.management import call_command
 from rest_framework.test import APIClient
 
 from treeherder.etl.jobs import store_job_data
@@ -62,6 +63,14 @@ def pytest_runtest_setup(item):
     from django.core.cache import cache
 
     cache.clear()
+
+
+@pytest.fixture
+def setup_repository_data(django_db_setup, django_db_blocker):
+    with django_db_blocker.unblock():
+        call_command('loaddata', join(SAMPLE_DATA_PATH, 'repository_group.json'))
+    with django_db_blocker.unblock():
+        call_command('loaddata', join(SAMPLE_DATA_PATH, 'repository.json'))
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -629,6 +638,40 @@ def client():
 def authorized_sheriff_client(client, test_sheriff):
     client.force_authenticate(user=test_sheriff)
     return client
+
+
+@pytest.fixture
+def mock_file_bugzilla_map_request(monkeypatch):
+    """
+    Mock fetch_json() used by files_bugzilla_map ETL to return local sample
+    files which map source files to Bugzilla components.
+    """
+    import treeherder.etl.files_bugzilla_map
+
+    def _fetch_data(self, project):
+        url = (
+            'https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.%s.latest.source.source-bugzilla-info/artifacts/public/components.json'
+            % project
+        )
+        files_bugzilla_data = None
+        file_name = "files_bugzilla_map_%s_%s.json" % (project, self.run_id)
+        exception = None
+        try:
+            tests_folder = os.path.dirname(__file__)
+            data_path = os.path.join(tests_folder, "sample_data", "files_bugzilla_map", file_name)
+            with open(data_path) as f:
+                files_bugzilla_data = json.load(f)
+        except Exception as e:
+            exception = e
+        return {
+            "url": url,
+            "files_bugzilla_data": files_bugzilla_data,
+            "exception": exception,
+        }
+
+    monkeypatch.setattr(
+        treeherder.etl.files_bugzilla_map.FilesBugzillaMapProcess, 'fetch_data', _fetch_data
+    )
 
 
 @pytest.fixture

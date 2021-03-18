@@ -24,6 +24,9 @@ services:
       - SITE_URL=http://backend:8000/
       - TREEHERDER_DEBUG=True
       - NEW_RELIC_INSIGHTS_API_KEY=${NEW_RELIC_INSIGHTS_API_KEY:-}
+      # This enables us to determine if the tests are running within the context of the CI
+      # For instance, we don't report Sentry errors or transactions if running within it
+      - CIRCLECI=${CIRCLECI:-}
     entrypoint: './docker/entrypoint.sh'
     # We *ONLY* initialize the data when we're running the backend
     command: './initialize_data.sh ./manage.py runserver 0.0.0.0:8000'

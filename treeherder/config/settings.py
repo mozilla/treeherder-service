@@ -1,10 +1,13 @@
 import os
 import platform
 import re
+import sys
 from datetime import timedelta
 from os.path import abspath, dirname, join
 
 import environ
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 from furl import furl
 from kombu import Exchange, Queue
 from adr import config
@@ -22,6 +25,36 @@ IS_WINDOWS = "windows" in platform.system().lower()
 # Top Level configuration
 DEBUG = env.bool("TREEHERDER_DEBUG", default=False)
 LOGGING_LEVEL = env("LOGGING_LEVEL", default="INFO")
+
+# treeherder.config.settings.py is loaded by various projects (e.g. celery)
+# In order to enable the correct integrations for each we will add them on a
+# case by cases, otherwise, the Python SDK will be initialized without any
+integrations = []
+# Enable Django for when we run "./manage.py runserver ..." or
+# "newrelic-admin run-program gunicorn treeherder.config.wsgi:application --timeout 20"
+if 'runserver' in sys.argv or 'treeherder.config.wsgi:application' in sys.argv:
+    integrations = [DjangoIntegration()]
+
+# Do not report error or transactions if executing within the CI or running tests
+# This can be changed later if deemed useful and there's enough perf transactions per month
+if not ('tests/' in sys.argv or env.bool("CIRCLECI", default=False)):
+    sentry_sdk.init(
+        dsn="https://8fe10c59224c49a2947dca5c8145d545@o510822.ingest.sentry.io/5607053",
+        integrations=integrations,
+        environment=env("HEROKU_APP_NAME", default="development"),
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # If you need less transactions in production reduce this value
+        traces_sample_rate=1.0,
+        # When doing development Sentry should not create a release since some of these commits
+        # in our local checkout will never make it to master (e.g. squashing or history rewriting)
+        release=None if os.environ.get("HEROKU_APP_NAME") else "dev",
+        # If you wish to associate users to errors (since we are using
+        # django.contrib.auth).
+        # If you need to, you can scrub data via the UI:
+        # https://docs.sentry.io/product/data-management-settings/server-side-scrubbing/
+        send_default_pii=True,
+    )
 
 NEW_RELIC_INSIGHTS_API_KEY = env("NEW_RELIC_INSIGHTS_API_KEY", default=None)
 NEW_RELIC_INSIGHTS_API_URL = 'https://insights-api.newrelic.com/v1/accounts/677903/query'

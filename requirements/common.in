@@ -39,3 +39,6 @@ mo-testing
 
 # Required for Push Health
 mozci
+
+# To report errors and performance data
+sentry_sdk==0.19.5

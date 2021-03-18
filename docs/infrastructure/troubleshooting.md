@@ -73,6 +73,15 @@ See the Heroku [logging] and [error codes] documentation for help understanding 
     Django is configured to only output log levels `WARNING` and above, unless debug
     mode is enabled (such in Vagrant).
 
+## Errors and performance monitoring
+
+With Sentry, you can now track all errors produced and the performance of every transaction.
+You can also create alerts and assign on-going errors to a team member.
+Sentry also tracks releases automaticaly to help you determine which release introduced an error.
+
+NOTE: The SDKs, when doing local development, have been configured to report to a release called `dev`
+instead of letting it report releases based on a commit hash of your local checkout.
+
 ## Scenarios
 
 ### Regression from a deployment

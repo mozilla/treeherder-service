@@ -4,6 +4,7 @@ from rest_framework import routers
 from treeherder.webapp.api import (
     auth,
     bug,
+    bug_creation,
     bugzilla,
     changelog,
     csp_report,
@@ -97,6 +98,11 @@ default_router.register(
     r'optioncollectionhash', refdata.OptionCollectionHashViewSet, basename='optioncollectionhash'
 )
 default_router.register(r'failureclassification', refdata.FailureClassificationViewSet)
+default_router.register(
+    r'bugzilla-component',
+    bug_creation.FilesBugzillaMapViewSet,
+    basename='bugzilla-component',
+)
 default_router.register(r'user', refdata.UserViewSet, basename='user')
 default_router.register(
     r'machineplatforms', machine_platforms.MachinePlatformsViewSet, basename='machineplatforms'

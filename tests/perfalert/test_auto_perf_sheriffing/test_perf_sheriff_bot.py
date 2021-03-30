@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from django.db import models
@@ -12,6 +12,16 @@ from treeherder.perf.exceptions import MaxRuntimeExceeded
 from treeherder.perf.models import BackfillRecord, BackfillReport
 
 EPOCH = datetime.utcfromtimestamp(0)
+
+def mock_hgmo_info(repository, revision):
+    return {
+        "desc": "Bug 1692837 -",
+        "user": "Sheriff <perfsheriff@mozilla.com>"
+    }
+patch(
+    "treeherder.perf.auto_perf_sheriffing.perf_sheriff_bot.Helper.get_hgmo_bug_info",
+    new=mock_hgmo_info
+)
 
 
 def has_changed(orm_object: models.Model) -> bool:
@@ -255,6 +265,27 @@ def test_backfilling_gracefully_handles_invalid_json_contexts_without_blowing_up
     record_ready_for_processing.context = broken_context_str
     record_ready_for_processing.save()
 
+    sheriff_bot = PerfSheriffBot(
+        report_maintainer_mock, backfill_tool_mock, secretary, notify_client_mock
+    )
+    try:
+        sheriff_bot.sheriff(since=EPOCH, frameworks=['raptor', 'talos'], repositories=['autoland'])
+    except (JSONDecodeError, KeyError, Job.DoesNotExist, Push.DoesNotExist):
+        pytest.fail()
+
+    record_ready_for_processing.refresh_from_db()
+
+    assert record_ready_for_processing.status == BackfillRecord.FAILED
+    assert not has_changed(sheriff_settings)
+
+
+def test_backfilling_alert_recompute(
+    report_maintainer_mock,
+    backfill_tool_mock,
+    secretary,
+    record_ready_for_processing,
+    notify_client_mock,
+):
     sheriff_bot = PerfSheriffBot(
         report_maintainer_mock, backfill_tool_mock, secretary, notify_client_mock
     )

@@ -1,3 +1,4 @@
+import uuid
 from copy import copy, deepcopy
 from datetime import datetime, timedelta
 
@@ -165,3 +166,62 @@ def create_record():
         return BackfillRecord.objects.create(alert=alert, report=report)
 
     return _create_record
+
+
+@pytest.fixture
+def record_backfilled(test_perf_alert, record_context_sample):
+    report = BackfillReport.objects.create(summary=test_perf_alert.summary)
+    record = BackfillRecord.objects.create(
+        alert=test_perf_alert,
+        report=report,
+        status=BackfillRecord.BACKFILLED,
+    )
+    record.set_context(record_context_sample)
+    record.save()
+    return record
+
+
+@pytest.fixture
+def range_dates(record_context_sample):
+
+    from_date = datetime.fromisoformat(record_context_sample[0]['push_timestamp'])
+    to_date = datetime.fromisoformat(record_context_sample[-1]['push_timestamp'])
+
+    return {
+        'before_date': from_date - timedelta(days=5),
+        'from_date': from_date,
+        'in_range_date': from_date + timedelta(hours=13),
+        'to_date': to_date,
+        'after_date': to_date + timedelta(days=3),
+    }
+
+
+@pytest.fixture
+def outcome_checking_pushes(
+    create_push, range_dates, record_context_sample, test_repository, test_repository_2
+):
+    from_push_id = record_context_sample[0]['push_id']
+    to_push_id = record_context_sample[-1]['push_id']
+
+    pushes = [
+        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['before_date']),
+        create_push(
+            test_repository,
+            revision=uuid.uuid4(),
+            time=range_dates['from_date'],
+            explicit_id=from_push_id,
+        ),
+        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
+        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
+        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
+        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
+        create_push(
+            test_repository,
+            revision=uuid.uuid4(),
+            time=range_dates['to_date'],
+            explicit_id=to_push_id,
+        ),
+        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['after_date']),
+    ]
+
+    return pushes

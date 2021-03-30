@@ -1,21 +1,31 @@
 import logging
+import re
+import requests
 from datetime import datetime, timedelta
-from json import JSONDecodeError
+from json import dumps, JSONDecodeError
 from logging import INFO, WARNING
 from typing import List, Tuple
 
 import taskcluster
 from django.conf import settings
 from django.db.models import QuerySet
+from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from taskcluster.helper import TaskclusterConfig
 
-from treeherder.model.models import Job, Push
+from treeherder.intermittents_commenter.commenter import Commenter
+from treeherder.model.models import Job, Push, Commit
+from treeherder.perf.auto_perf_sheriffing.alert_manager import AlertManager, AlertInvalidated
+from treeherder.perf.auto_perf_sheriffing.bugzilla_helper import BugzillaHelper
 from treeherder.perf.auto_perf_sheriffing.backfill_reports import BackfillReportMaintainer
 from treeherder.perf.auto_perf_sheriffing.backfill_tool import BackfillTool
+from treeherder.perf.auto_perf_sheriffing.outcome_checker import OutcomeChecker
 from treeherder.perf.auto_perf_sheriffing.secretary_tool import SecretaryTool
 from treeherder.perf.email import BackfillNotificationWriter, EmailWriter
 from treeherder.perf.exceptions import CannotBackfill, MaxRuntimeExceeded
-from treeherder.perf.models import BackfillRecord, BackfillReport
+from treeherder.perf.models import BackfillRecord, BackfillReport, PerformanceAlertSummary, PerformanceDatum
+from treeherder.perfalert.perfalert import detect_changes
+from treeherder.utils.http import make_request
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +84,9 @@ class PerfSheriffBot:
 
         logger.info('Perfsheriff bot: Notify backfill outcome')
         self._notify_backfill_outcome()
+
+        logger.info('Perfsheriff bot: Handling backfilled alerts')
+        self._handle_backfill_alerts()
 
     def runtime_exceeded(self) -> bool:
         elapsed_runtime = datetime.now() - self._wake_up_time
@@ -204,3 +217,81 @@ class PerfSheriffBot:
 
         # send email
         self._notify.email(backfill_notification)
+
+    def _handle_backfill_alerts(self):
+        # Get backfilled alerts
+        bugzilla = BugzillaHelper()
+        backfilled_records = BackfillRecord.objects.select_related(
+            'alert', 'alert__series_signature', 'alert__series_signature__platform'
+        ).filter(
+            # TODO: Enable this filter once we start getting more backfills
+            # status=BackfillRecord.SUCCESSFUL,
+            alert__series_signature__platform__platform__icontains='linux',
+        )
+
+        for record in backfilled_records:
+            # Start by recomputing the alert to see if we have a new
+            # culprit commit
+            # TODO: Use a try/catch on this later rather than the changed variable
+            try:
+                cur_push, prev_push, changed = AlertManager.recompute_backfill_alert(record)
+                if changed is None:
+                    logger.warning(f"Failed to recompute the alert in record {record}")
+                    continue
+            except AlertInvalidated as e:
+                # TODO: Mark the alert as invalid
+                logger.info(
+                    f"The alert that was backfilled is now invalid. Reason: {e}"
+                )
+                continue
+
+            # Check if this push has an alert summary already. If it does, reassign
+            # the alerts to it, delete this summary.
+            existing_summary = PerformanceAlertSummary.objects.filter(push=cur_push)
+
+            if existing_summary and len(existing_summary) > 0:
+                existing_summary = existing_summary[0]
+                if existing_summary != record.alert.summary:
+                    # TODO: Reassign alerts to that existing summary (delete this one too?)
+                    logger.info("reassigning...")
+            else:
+                existing_summary = record.alert.summary
+
+            if existing_summary.bug_number:
+                logger.info("Bug exists for this summary, make a comment on it")
+                bugzilla.create_alert_comment(
+                    # TODO: Use template for alert
+                    {'comment': {'body': "Alert!"}},
+                    existing_summary.bug_number
+                )
+                continue
+
+            base_params = {
+                'type': "defect",
+                'product': "Testing",
+                'component': "Raptor",
+                'version': "unspecified",
+                'severity': "S3",
+                'priority': "P5",
+                'comment_tags': "treeherder",
+            }
+
+            # File a bug for this alert
+            new_bug_number = None
+            try:
+                logger.info(f"Creating bug with the following paramaters: {base_params}")
+                response = bugzilla.create_alert_bug(cur_push, base_params)
+                if response.status_code != "200":
+                    logger.info(
+                        f"Failed to create bug.\n"
+                        f"Status: {response.status_code}\n"
+                        f"Failure: {dumps(response.json(), indent=4)}"
+                    )
+                    # return
+                logger.info(response.json())
+                new_bug_number = response.json()["id"]
+            except Exception as e:
+                logger.exception(str(e))
+                # raise
+
+            # TODO: Update alert summary with the new bug_number

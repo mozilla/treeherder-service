@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timedelta
 
 import pytest
@@ -11,6 +10,7 @@ from treeherder.perf.auto_perf_sheriffing.secretary_tool import SecretaryTool
 from treeherder.model.models import Push, Job
 from treeherder.perf.models import BackfillRecord, BackfillReport, PerformanceSettings
 from treeherder.perf.auto_perf_sheriffing.outcome_checker import OutcomeChecker, OutcomeStatus
+from treeherder.perf.auto_perf_sheriffing.utils import Helper
 
 # we're testing against this (automatically provided by fixtures)
 JOB_TYPE_ID = 1
@@ -20,65 +20,6 @@ def get_middle_index(successful_jobs):
     # get middle index to make sure the push is in range
     index_in_range = int((len(successful_jobs) + 1) / 2)
     return index_in_range
-
-
-@pytest.fixture
-def record_backfilled(test_perf_alert, record_context_sample):
-    report = BackfillReport.objects.create(summary=test_perf_alert.summary)
-    record = BackfillRecord.objects.create(
-        alert=test_perf_alert,
-        report=report,
-        status=BackfillRecord.BACKFILLED,
-    )
-    record.set_context(record_context_sample)
-    record.save()
-    return record
-
-
-@pytest.fixture
-def range_dates(record_context_sample):
-
-    from_date = datetime.fromisoformat(record_context_sample[0]['push_timestamp'])
-    to_date = datetime.fromisoformat(record_context_sample[-1]['push_timestamp'])
-
-    return {
-        'before_date': from_date - timedelta(days=5),
-        'from_date': from_date,
-        'in_range_date': from_date + timedelta(hours=13),
-        'to_date': to_date,
-        'after_date': to_date + timedelta(days=3),
-    }
-
-
-@pytest.fixture
-def outcome_checking_pushes(
-    create_push, range_dates, record_context_sample, test_repository, test_repository_2
-):
-    from_push_id = record_context_sample[0]['push_id']
-    to_push_id = record_context_sample[-1]['push_id']
-
-    pushes = [
-        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['before_date']),
-        create_push(
-            test_repository,
-            revision=uuid.uuid4(),
-            time=range_dates['from_date'],
-            explicit_id=from_push_id,
-        ),
-        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
-        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
-        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
-        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['in_range_date']),
-        create_push(
-            test_repository,
-            revision=uuid.uuid4(),
-            time=range_dates['to_date'],
-            explicit_id=to_push_id,
-        ),
-        create_push(test_repository, revision=uuid.uuid4(), time=range_dates['after_date']),
-    ]
-
-    return pushes
 
 
 @pytest.fixture
@@ -192,41 +133,6 @@ def test_no_action_when_in_progress(get_outcome_checker_mock, record_backfilled)
     assert BackfillRecord.objects.filter(status=BackfillRecord.BACKFILLED).count() == 1
     secretary.check_outcome()
     assert BackfillRecord.objects.filter(status=BackfillRecord.BACKFILLED).count() == 1
-
-
-def test_outcome_checker_identifies_pushes_in_range(
-    record_backfilled, test_repository, test_repository_2, range_dates, outcome_checking_pushes
-):
-    # TODO: retarget this test to BackfillRecord.get_pushes_in_range()
-    outcome_checker = OutcomeChecker()
-    total_pushes = Push.objects.count()
-
-    from_time = range_dates['from_date']
-    to_time = range_dates['to_date']
-
-    total_outside_pushes = Push.objects.filter(
-        Q(repository=test_repository) & (Q(time__lt=from_time) | Q(time__gt=to_time))
-    ).count()
-
-    pushes_in_range = outcome_checker._get_pushes_in_range(from_time, to_time, test_repository.id)
-    assert len(pushes_in_range) == total_pushes - total_outside_pushes
-
-    # change repository for the first 2 pushes in range
-    assert test_repository.id != test_repository_2.id
-
-    total_changed_pushes = 2
-    for push in pushes_in_range[:total_changed_pushes]:
-        push.repository = test_repository_2
-        push.save()
-
-    total_other_repo_pushes = Push.objects.filter(repository=test_repository_2).count()
-    assert total_other_repo_pushes == total_changed_pushes
-
-    updated_pushes_in_range = outcome_checker._get_pushes_in_range(
-        from_time, to_time, test_repository.id
-    )
-
-    assert len(updated_pushes_in_range) == len(pushes_in_range) - total_other_repo_pushes
 
 
 class TestOutcomeChecker:

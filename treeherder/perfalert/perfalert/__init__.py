@@ -121,6 +121,17 @@ def detect_changes(data, min_back_window=12, max_back_window=24, fore_window=12,
     # Use T-Tests
     # Analyze test data using T-Tests, comparing data[i-j:i] to data[i:i+k]
     data = sorted(data)
+    print(data)
+    import time
+    # time.sleep(10)
+
+    values = [
+        sum(data[i].values)/len(data[i].values)
+        for i in range(1, len(data))
+    ]
+
+    print("sparky data")
+    print(values)
 
     last_seen_regression = 0
     for i in range(1, len(data)):

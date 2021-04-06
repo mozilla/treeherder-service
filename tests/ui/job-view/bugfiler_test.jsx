@@ -2,7 +2,7 @@ import React from 'react';
 import { mount } from 'enzyme/build';
 import fetchMock from 'fetch-mock';
 
-import { hgBaseUrl, bzBaseUrl } from '../../../ui/helpers/url';
+import { bzComponentEndpoint, bzBaseUrl } from '../../../ui/helpers/url';
 import { isReftest } from '../../../ui/helpers/job';
 import { BugFilerClass } from '../../../ui/shared/BugFiler';
 
@@ -39,18 +39,13 @@ describe('BugFiler', () => {
 
   beforeEach(() => {
     fetchMock.mock(
-      `${hgBaseUrl}mozilla-central/json-mozbuildinfo?p=browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js`,
-      {
-        aggregate: {
-          bug_component_counts: [[['Firefox', 'Search'], 1]],
-          recommended_bug_component: ['Firefox', 'Search'],
+      `/api${bzComponentEndpoint}?path=browser%2Fextensions%2Fpdfjs%2Ftest%2Fbrowser_pdfjs_views.js`,
+      [
+        {
+          product: 'Mock Product',
+          component: 'Mock Component',
         },
-        files: {
-          'browser/components/search/test/browser_searchbar_smallpanel_keyboard_navigation.js': {
-            bug_component: ['Firefox', 'Search'],
-          },
-        },
-      },
+      ],
     );
 
     fetchMock.mock(
@@ -117,6 +112,55 @@ describe('BugFiler', () => {
       />,
     );
   };
+
+  test('suggested product retrieved and when bugfiler gets opened', async () => {
+    const suggestions = [
+      {
+        bugs: {},
+        line_number: 10,
+        path_end: 'browser/extensions/pdfjs/test/browser_pdfjs_views.js',
+        search_terms: [],
+        search:
+          'TEST-UNEXPECTED-FAIL | browser/extensions/pdfjs/test/browser_pdfjs_views.js | Test timed out -',
+      },
+      {
+        bugs: {},
+        line_number: 235,
+        path_end: 'browser/extensions/pdfjs/test/browser_pdfjs_views.js',
+        search_terms: [],
+        search:
+          'TEST-UNEXPECTED-FAIL | browser/extensions/pdfjs/test/browser_pdfjs_views.js | Found a tab after previous test timed out: about:blank -',
+      },
+      {
+        bugs: {},
+        line_number: 783,
+        path_end: 'flee',
+        search_terms: [],
+        search: 'REFTEST TEST-UNEXPECTED-PASS | flee | floo',
+      },
+    ];
+    const bugFiler = mount(
+      <BugFilerClass
+        isOpen={isOpen}
+        toggle={toggle}
+        suggestion={suggestions[0]}
+        suggestions={suggestions}
+        fullLog={fullLog}
+        parsedLog={parsedLog}
+        reftestUrl={isReftest(selectedJob) ? reftest : ''}
+        successCallback={successCallback}
+        jobGroupName={selectedJob.job_group_name}
+        notify={() => {}}
+      />,
+    );
+
+    await bugFiler
+      .instance()
+      .findProductByPath(bugFiler.props().suggestion.path_end);
+    const { suggestedProducts } = bugFiler.state();
+    expect(suggestedProducts).toHaveLength(1);
+    expect(suggestedProducts).toEqual(['Mock Product :: Mock Component']);
+  });
 
   test('parses a crash suggestion', () => {
     const summary =

@@ -3,7 +3,7 @@ import pytest
 from treeherder.model.error_summary import (
     get_cleaned_line,
     get_crash_signature,
-    get_error_search_term,
+    get_error_search_term_and_path,
 )
 
 LINE_CLEANING_TEST_CASES = (
@@ -39,7 +39,10 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             '| chrome://mochitests/content/browser/browser/components/loop/test/mochitest/browser_fxa_login.js '
             '| Check settings tab URL - Got http://mochi.test:8888/browser/browser/components/loop/test/mochitest/loop_fxa.sjs'
         ),
-        'browser_fxa_login.js',
+        {
+            'path_end': 'chrome://mochitests/content/browser/browser/components/loop/test/mochitest/browser_fxa_login.js',
+            'search_term': 'browser_fxa_login.js',
+        },
     ),
     (
         (
@@ -47,7 +50,10 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             '| file:///C:/slave/test/build/tests/reftest/tests/layout/reftests/layers/component-alpha-exit-1.html '
             '| image comparison (==), max difference: 255, number of differing pixels: 251'
         ),
-        'component-alpha-exit-1.html',
+        {
+            'path_end': 'file:///C:/slave/test/build/tests/reftest/tests/layout/reftests/layers/component-alpha-exit-1.html',
+            'search_term': 'component-alpha-exit-1.html',
+        },
     ),
     (
         (
@@ -55,7 +61,10 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             '| /tests/dom/media/tests/mochitest/test_dataChannel_basicAudio.html '
             '| undefined assertion name - Result logged after SimpleTest.finish()'
         ),
-        'test_dataChannel_basicAudio.html',
+        {
+            'path_end': '/tests/dom/media/tests/mochitest/test_dataChannel_basicAudio.html',
+            'search_term': 'test_dataChannel_basicAudio.html',
+        },
     ),
     (
         (
@@ -63,7 +72,10 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             r"| mainthreadio "
             r"| File 'c:\users\cltbld~1.t-w' was accessed and we were not expecting it: {'Count': 6, 'Duration': 0.112512, 'RunCount': 6}"
         ),
-        'mainthreadio',
+        {
+            'path_end': 'mainthreadio',
+            'search_term': 'mainthreadio',
+        },
     ),
     (
         (
@@ -72,7 +84,10 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             "http://10.0.2.2:8854/tests/dom/canvas/test/reftest/wrapper.html?green.png "
             "| application crashed [@ jemalloc_crash]"
         ),
-        'webgl-resize-test.html',
+        {
+            'path_end': 'http://10.0.2.2:8854/tests/dom/canvas/test/reftest/webgl-resize-test.html',
+            'search_term': 'webgl-resize-test.html',
+        },
     ),
     (
         (
@@ -81,7 +96,10 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             "http://10.0.2.2:8854/tests/dom/canvas/test/reftest/wrapper.html?green.png "
             "| application crashed [@ jemalloc_crash]"
         ),
-        'webgl-resize-test.html',
+        {
+            'path_end': 'http://10.0.2.2:8854/tests/dom/canvas/test/reftest/webgl-resize-test.html',
+            'search_term': 'webgl-resize-test.html',
+        },
     ),
     (
         (
@@ -89,24 +107,19 @@ PIPE_DELIMITED_LINE_TEST_CASES = (
             "| /tests/dom/events/test/pointerevents/pointerevent_touch-action-table-test_touch-manual.html "
             "| touch-action attribute test on the cell: assert_true: scroll received while shouldn't expected true got false"
         ),
-        'pointerevent_touch-action-table-test_touch-manual.html',
-    ),
-    (
-        (
-            "TEST-UNEXPECTED-FAIL "
-            "| /tests/dom/events/test/pointerevents/pointerevent_touch-action-table-test_touch-manual.html "
-            "| touch-action attribute test on the cell: assert_true: scroll received while shouldn't expected true got false"
-        ),
-        'pointerevent_touch-action-table-test_touch-manual.html',
+        {
+            'path_end': '/tests/dom/events/test/pointerevents/pointerevent_touch-action-table-test_touch-manual.html',
+            'search_term': 'pointerevent_touch-action-table-test_touch-manual.html',
+        },
     ),
 )
 
 
-@pytest.mark.parametrize(("line", "exp_search_term"), PIPE_DELIMITED_LINE_TEST_CASES)
-def test_get_delimited_search_term(line, exp_search_term):
+@pytest.mark.parametrize(("line", "exp_search_info"), PIPE_DELIMITED_LINE_TEST_CASES)
+def test_get_delimited_search_term(line, exp_search_info):
     """Test search term extraction for a pipe delimited error line"""
-    actual_search_term = get_error_search_term(line)
-    assert actual_search_term == exp_search_term
+    actual_search_info = get_error_search_term_and_path(line)
+    assert actual_search_info == exp_search_info
 
 
 LEAK_LINE_TEST_CASES = (
@@ -117,7 +130,10 @@ LEAK_LINE_TEST_CASES = (
             '(BackstagePass, CallbackObject, DOMEventTargetHelper, '
             'EventListenerManager, EventTokenBucket, ...)'
         ),
-        'BackstagePass, CallbackObject, DOMEventTargetHelper, EventListenerManager, EventTokenBucket, ...',
+        {
+            'path_end': None,
+            'search_term': 'BackstagePass, CallbackObject, DOMEventTargetHelper, EventListenerManager, EventTokenBucket, ...',
+        },
     ),
     (
         (
@@ -126,7 +142,10 @@ LEAK_LINE_TEST_CASES = (
             '(AsyncLatencyLogger, AsyncTransactionTrackersHolder, AudioOutputObserver, '
             'BufferRecycleBin, CipherSuiteChangeObserver, ...)'
         ),
-        'AsyncLatencyLogger, AsyncTransactionTrackersHolder, AudioOutputObserver, BufferRecycleBin, CipherSui',
+        {
+            'path_end': None,
+            'search_term': 'AsyncLatencyLogger, AsyncTransactionTrackersHolder, AudioOutputObserver, BufferRecycleBin, CipherSui',
+        },
     ),
     (
         (
@@ -134,35 +153,44 @@ LEAK_LINE_TEST_CASES = (
             '| LeakSanitizer | leak at '
             'MakeUnique, nsThread::nsChainedEventQueue::nsChainedEventQueue, nsThread, nsThreadManager::Init'
         ),
-        'MakeUnique, nsThread::nsChainedEventQueue::nsChainedEventQueue, nsThread, nsThreadManager::Init',
+        {
+            'path_end': None,
+            'search_term': 'MakeUnique, nsThread::nsChainedEventQueue::nsChainedEventQueue, nsThread, nsThreadManager::Init',
+        },
     ),
 )
 
 
-@pytest.mark.parametrize(("line", "exp_search_term"), LEAK_LINE_TEST_CASES)
-def test_get_leak_search_term(line, exp_search_term):
+@pytest.mark.parametrize(("line", "exp_search_info"), LEAK_LINE_TEST_CASES)
+def test_get_leak_search_term(line, exp_search_info):
     """tests the search term extracted from a leak error line is correct"""
-    actual_search_term = get_error_search_term(line)
-    assert actual_search_term == exp_search_term
+    actual_search_info = get_error_search_term_and_path(line)
+    assert actual_search_info == exp_search_info
 
 
 FULL_LINE_FALLBACK_TEST_CASES = (
     (
         'Automation Error: No crash directory (/mnt/sdcard/tests/profile/minidumps/) found on remote device',
-        'Automation Error: No crash directory (/mnt/sdcard/tests/profile/minidumps/) found on remote device',
+        {
+            'path_end': None,
+            'search_term': 'Automation Error: No crash directory (/mnt/sdcard/tests/profile/minidumps/) found on remote device',
+        },
     ),
     (
         'PROCESS-CRASH | Automation Error: Missing end of test marker (process crashed?)',
-        'Automation Error: Missing end of test marker (process crashed?)',
+        {
+            'path_end': None,
+            'search_term': 'Automation Error: Missing end of test marker (process crashed?)',
+        },
     ),
 )
 
 
-@pytest.mark.parametrize(("line", "exp_search_term"), FULL_LINE_FALLBACK_TEST_CASES)
-def test_get_full_line_search_term(line, exp_search_term):
+@pytest.mark.parametrize(("line", "exp_search_info"), FULL_LINE_FALLBACK_TEST_CASES)
+def test_get_full_line_search_term(line, exp_search_info):
     """Test that the full error line is used as a fall-back if no test name found"""
-    actual_search_term = get_error_search_term(line)
-    assert actual_search_term == exp_search_term
+    actual_search_info = get_error_search_term_and_path(line)
+    assert actual_search_info == exp_search_info
 
 
 LONG_LINE_TEST_CASES = (
@@ -177,10 +205,11 @@ LONG_LINE_TEST_CASES = (
             '\'b2g-inbound\', \'--download-symbols\', \'ondemand\'], '
             'attempting to kill'
         ),
-        (
-            'command timed out: 2400 seconds without output running '
-            '[\'/tools/buildbot/bin/python\', \'scripts/scrip'
-        ),
+        {
+            'path_end': None,
+            'search_term': 'command timed out: 2400 seconds without output running '
+            '[\'/tools/buildbot/bin/python\', \'scripts/scrip',
+        },
     ),
     (
         (
@@ -188,18 +217,21 @@ LONG_LINE_TEST_CASES = (
             '| test_switch_frame.py TestSwitchFrame.test_should_be_able_to_carry_on_working_if_the_frame_is_deleted_from_under_us '
             '| AssertionError: 0 != 1'
         ),
-        'test_switch_frame.py TestSwitchFrame.test_should_be_able_to_carry_on_working_if_the_frame_is_deleted',
+        {
+            'path_end': 'test_switch_frame.py TestSwitchFrame.test_should_be_able_to_carry_on_working_if_the_frame_is_deleted_from_under_us',
+            'search_term': 'test_switch_frame.py TestSwitchFrame.test_should_be_able_to_carry_on_working_if_the_frame_is_deleted',
+        },
     ),
 )
 
 # command timed out: 2400 seconds without output running ['/tools/buildbot/bin/python', 'scripts/scripts/android_emulator_unittest.py', '--cfg', 'android/androidx86.py', '--test-suite', 'robocop-1', '--test-suite', 'robocop-2', '--test-suite', 'robocop-3', '--test-suite', 'xpcshell', '--blob-upload-branch', 'b2g-inbound', '--download-symbols', 'ondemand'], attempting to kill
 
 
-@pytest.mark.parametrize(("line", "exp_search_term"), LONG_LINE_TEST_CASES)
-def test_get_long_search_term(line, exp_search_term):
+@pytest.mark.parametrize(("line", "exp_search_info"), LONG_LINE_TEST_CASES)
+def test_get_long_search_term(line, exp_search_info):
     """tests that long search terms are capped at 100 characters"""
-    actual_search_term = get_error_search_term(line)
-    assert actual_search_term == exp_search_term
+    actual_search_info = get_error_search_term_and_path(line)
+    assert actual_search_info == exp_search_info
 
 
 CRASH_LINE_TEST_CASES = (
@@ -214,31 +246,43 @@ CRASH_LINE_TEST_CASES = (
 )
 
 
-@pytest.mark.parametrize(("line", "exp_search_term"), CRASH_LINE_TEST_CASES)
-def test_get_crash_signature(line, exp_search_term):
+@pytest.mark.parametrize(("line", "exp_search_info"), CRASH_LINE_TEST_CASES)
+def test_get_crash_signature(line, exp_search_info):
     """tests the search term extracted from an error line is correct"""
-    actual_search_term = get_crash_signature(line)
-    assert actual_search_term == exp_search_term
+    actual_search_info = get_crash_signature(line)
+    assert actual_search_info == exp_search_info
 
 
 BLACKLIST_TEST_CASES = (
     (
         'TEST-UNEXPECTED-FAIL | remoteautomation.py | application timed out after 330 seconds with no output',
-        'remoteautomation.py | application timed out after 330 seconds with no output',
+        {
+            'path_end': 'remoteautomation.py',
+            'search_term': 'remoteautomation.py | application timed out after 330 seconds with no output',
+        },
     ),
-    ('Return code: 1', None),
+    (
+        'Return code: 1',
+        {
+            'path_end': None,
+            'search_term': None,
+        },
+    ),
     (
         (
             'REFTEST PROCESS-CRASH | file:///home/worker/workspace/build/tests/reftest/tests/layout/reftests/font-inflation/video-1.html '
             '| application crashed [@ mozalloc_abort]'
         ),
-        'video-1.html',
+        {
+            'path_end': 'file:///home/worker/workspace/build/tests/reftest/tests/layout/reftests/font-inflation/video-1.html',
+            'search_term': 'video-1.html',
+        },
     ),
 )
 
 
-@pytest.mark.parametrize(("line", "exp_search_term"), BLACKLIST_TEST_CASES)
-def test_get_blacklisted_search_term(line, exp_search_term):
+@pytest.mark.parametrize(("line", "exp_search_info"), BLACKLIST_TEST_CASES)
+def test_get_blacklisted_search_term(line, exp_search_info):
     """Test search term extraction for lines that contain a blacklisted term"""
-    actual_search_term = get_error_search_term(line)
-    assert actual_search_term == exp_search_term
+    actual_search_info = get_error_search_term_and_path(line)
+    assert actual_search_info == exp_search_info

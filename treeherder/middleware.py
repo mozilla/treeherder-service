@@ -19,7 +19,7 @@ CSP_DIRECTIVES = [
     "font-src 'self' https://fonts.gstatic.com",
     # The `data:` is required for images that were inlined by webpack's url-loader (as an optimisation).
     "img-src 'self' data:",
-    "connect-src 'self' https://community-tc.services.mozilla.com https://firefox-ci-tc.services.mozilla.com https://*.taskcluster-artifacts.net https://taskcluster-artifacts.net https://treestatus.mozilla-releng.net https://bugzilla.mozilla.org https://auth.mozilla.auth0.com https://stage.taskcluster.nonprod.cloudops.mozgcp.net/ https://artifacts.tcstage.mozaws.net/ https://*.artifacts.tcstage.mozaws.net/ https://insights-api.newrelic.com",
+    "connect-src 'self' https://community-tc.services.mozilla.com https://firefox-ci-tc.services.mozilla.com https://*.taskcluster-artifacts.net https://taskcluster-artifacts.net https://treestatus.mozilla-releng.net https://bugzilla.mozilla.org https://auth.mozilla.auth0.com https://stage.taskcluster.nonprod.cloudops.mozgcp.net https://artifacts.tcstage.mozaws.net https://*.artifacts.tcstage.mozaws.net https://insights-api.newrelic.com https://prototype.treeherder.nonprod.cloudops.mozgcp.net https://treeherder.allizom.org",
     # Required since auth0-js performs session renewals in an iframe.
     "frame-src 'self' https://auth.mozilla.auth0.com",
     "report-uri {}".format(reverse('csp-report')),

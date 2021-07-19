@@ -7,14 +7,8 @@
 if [ "$1" == "release" ]; then
     exec ./bin/pre_deploy
 
-# The `web` process type is the only one that receives external traffic from Heroku's routers.
 # We set the maximum request duration to 20 seconds, to ensure that poorly performing API
-# queries do not consume a gunicorn worker for unbounded lengths of time. See:
-# https://devcenter.heroku.com/articles/python-gunicorn
-# The Heroku Python buildpack sets some sensible gunicorn defaults via environment variables:
-# https://github.com/heroku/heroku-buildpack-python/blob/master/vendor/python.gunicorn.sh
-# https://github.com/heroku/heroku-buildpack-python/blob/master/vendor/WEB_CONCURRENCY.sh
-# TODO: Experiment with different dyno sizes and gunicorn concurrency/worker types (bug 1175472).
+# queries do not consume a gunicorn worker for unbounded lengths of time. 
 elif [ "$1" == "web" ]; then
     exec newrelic-admin run-program gunicorn treeherder.config.wsgi:application --timeout 20 --bind 0.0.0.0
 
@@ -25,9 +19,6 @@ elif [ "$1" == "web" ]; then
 # https://devcenter.heroku.com/articles/celery-heroku#using-remap_sigterm
 
 # This schedules (but does not run itself) the cron-like tasks listed in `CELERY_BEAT_SCHEDULE`.
-# However we're moving away from using this in favour of the Heroku scheduler addon.
-# NB: This should not be scaled up to more than 1 dyno otherwise duplicate tasks will be scheduled.
-# TODO: Move the remaining tasks to the addon and remove this process type (deps of bug 1176492).
 elif [ "$1" == "celery_scheduler" ]; then
     export REMAP_SIGTERM=SIGQUIT
     exec newrelic-admin run-program celery beat -A treeherder

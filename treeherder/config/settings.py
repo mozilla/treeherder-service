@@ -82,7 +82,7 @@ INSTALLED_APPS = [
     'treeherder.changelog',
 ]
 
-# Docker/outside-of-Docker/CircleCI vs Heroku/Review-app
+# Docker/outside-of-Docker/CircleCI
 if DEBUG:
     NEW_RELIC_DEVELOPER_MODE = True
     # This controls whether the Django debug toolbar should be shown or not
@@ -93,12 +93,6 @@ if DEBUG:
     }
     INSTALLED_APPS.append('debug_toolbar')
     INSTALLED_APPS.append('django_extensions')
-
-# Heroku-review-app (defined in app.json)
-if env("HEROKU_REVIEW_APP", default=False):
-    SITE_URL = "https://{}.herokuapp.com".format(env("HEROKU_APP_NAME"))
-    SITE_HOSTNAME = furl(SITE_URL).host
-    ALLOWED_HOSTS = [SITE_HOSTNAME]
 
 # Middleware
 MIDDLEWARE = [

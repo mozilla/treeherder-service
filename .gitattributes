@@ -115,9 +115,6 @@ browserslist   text eol=lf
 Makefile       text eol=lf
 makefile       text eol=lf
 
-## HEROKU
-Procfile    text eol=lf
-.slugignore text eol=lf
 
 ## GRAPHICS
 *.ai   binary

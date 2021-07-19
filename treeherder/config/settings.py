@@ -105,7 +105,7 @@ MIDDLEWARE = [
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'corsheaders.middleware.CorsMiddleware',
         # Allows both Django static files and those specified via `WHITENOISE_ROOT`
-        # to be served by WhiteNoise, avoiding the need for Apache/nginx on Heroku.
+        # to be served by WhiteNoise.
         'treeherder.middleware.CustomWhiteNoise',
         'django.middleware.gzip.GZipMiddleware',
         'debug_toolbar.middleware.DebugToolbarMiddleware' if DEBUG else False,
@@ -163,7 +163,6 @@ for alias in DATABASES:
 # Caches
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379')
 if connection_should_use_tls(REDIS_URL):
-    # Connect using TLS on Heroku.
     REDIS_URL = get_tls_redis_url(REDIS_URL)
 
 CACHES = {

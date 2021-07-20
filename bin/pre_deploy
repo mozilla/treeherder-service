@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
 # This script is for running tasks that are 'release' rather than 'build' specific:
-# https://devcenter.heroku.com/articles/runtime-principles#build-release-run
-# It is referenced via the `release` entry in `Procfile`, and is run after the
-# buildpack compile but prior to new code being deployed:
-# https://devcenter.heroku.com/articles/release-phase
-# NB: Changes made to the filesystem will not be preserved (use `post_compile` instead).
 
 # Make non-zero exit codes & other errors fatal.
 set -euo pipefail

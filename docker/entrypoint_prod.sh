@@ -2,8 +2,6 @@
 
 # The `release` process type specifies the command to run during deployment, and is where
 # we run DB migrations and other tasks that are 'release' rather than 'build' specific:
-# https://devcenter.heroku.com/articles/release-phase
-# https://devcenter.heroku.com/articles/runtime-principles#build-release-run
 if [ "$1" == "release" ]; then
     exec ./bin/pre_deploy
 
@@ -15,8 +13,6 @@ elif [ "$1" == "web" ]; then
 # All other process types can have arbitrary names.
 # The Celery options such as `--without-heartbeat` are from the recommendations here:
 # https://www.cloudamqp.com/docs/celery.html
-# The REMAP_SIGTERM is as recommended by:
-# https://devcenter.heroku.com/articles/celery-heroku#using-remap_sigterm
 
 # This schedules (but does not run itself) the cron-like tasks listed in `CELERY_BEAT_SCHEDULE`.
 elif [ "$1" == "celery_scheduler" ]; then

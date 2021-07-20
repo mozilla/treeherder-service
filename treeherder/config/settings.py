@@ -351,7 +351,6 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 
 # Make Celery defer the acknowledgment of a task until after the task has completed,
 # to prevent data loss in the case of celery master process crashes or infra failures.
-# https://devcenter.heroku.com/articles/celery-heroku#using-acks_late
 # http://docs.celeryproject.org/en/latest/userguide/tasks.html#Task.acks_late
 CELERY_TASK_ACKS_LATE = True
 

@@ -54,7 +54,7 @@ def print_url_to_taskcluster(job_guid):
     (decoded_task_id, _) = job_guid.split("/")
     # As of slugid v2, slugid.encode() returns a string not bytestring under Python 3.
     taskId = slugid.encode(uuid.UUID(decoded_task_id))
-    logger.info("https://taskcluster-ui.herokuapp.com/tasks/%s", taskId)
+    logger.info("https://firefox-ci-tc.services.mozilla.com/tasks/%s", taskId)
 
 
 if __name__ == "__main__":

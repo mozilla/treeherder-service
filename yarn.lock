@@ -1545,13 +1545,13 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
-"@pollyjs/adapter-fetch@^5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@pollyjs/adapter-fetch/-/adapter-fetch-5.1.0.tgz#b25cec1d9560bca70d87a6dc9066c296d2a46770"
-  integrity sha512-oij8WzZm7zSV7B49OFQaBkYqVTnxL4q3ykwwL9TwT/yntR370Ewh7g/k1nRJs1ZX3uKxKLPkFn5WkwhR07dDrw==
+"@pollyjs/adapter-fetch@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/@pollyjs/adapter-fetch/-/adapter-fetch-5.1.1.tgz#80e4b49bc1bff58fa70379ad6bb0a144f99760a6"
+  integrity sha512-ceWx8LGsdx0UNw9rSHY8IcBbmQlCR9EggpgVco702KCtj6SzSAmXhAX+RTQCvtWtCc4QasB39budxhRXCL0JZg==
   dependencies:
-    "@pollyjs/adapter" "^5.0.0"
-    "@pollyjs/utils" "^5.0.0"
+    "@pollyjs/adapter" "^5.1.1"
+    "@pollyjs/utils" "^5.1.1"
     detect-node "^2.0.4"
     to-arraybuffer "^1.0.1"
 
@@ -1572,13 +1572,6 @@
   dependencies:
     "@pollyjs/adapter" "^5.1.1"
     "@pollyjs/utils" "^5.1.1"
-
-"@pollyjs/adapter@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@pollyjs/adapter/-/adapter-5.0.0.tgz#faba5a7e68db38f56b4bf04271d8f5a10d5ca8c2"
-  integrity sha512-GaJUp9hKKKbRbh1FDbjVfxNGIYs8/1QQI5SR+zjz+OjpjV2btRPFCq1cqO4ORrHA2pTIC8IvEL3lgPSG4v/cPg==
-  dependencies:
-    "@pollyjs/utils" "^5.0.0"
 
 "@pollyjs/adapter@^5.1.1":
   version "5.1.1"

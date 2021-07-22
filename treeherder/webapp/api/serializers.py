@@ -127,6 +127,18 @@ class BugscacheSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class FilesBugzillaMapSerializer(serializers.ModelSerializer):
+    def to_representation(self, file_bugzilla_component):
+        return {
+            'product': file_bugzilla_component['bugzilla_component__product'],
+            'component': file_bugzilla_component['bugzilla_component__component'],
+        }
+
+    class Meta:
+        model = models.BugzillaComponent
+        fields = '__all__'
+
+
 class ClassifiedFailureSerializer(serializers.ModelSerializer):
     bug = BugscacheSerializer(read_only=True)
 

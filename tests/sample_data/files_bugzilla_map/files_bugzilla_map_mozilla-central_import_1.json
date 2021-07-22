@@ -1,0 +1,12 @@
+{
+  "AUTHORS": ["mozilla.org", "Licensing"],
+  "browser/components/BrowserGlue.jsm": ["Firefox", "General"],
+  "testing/web-platform/meta/IndexedDB/historical.html.ini": [
+    "Testing",
+    "web-platform-tests"
+  ],
+  "testing/web-platform/tests/IndexedDB/historical.html": [
+    "Core",
+    "Storage: IndexedDB"
+  ]
+}

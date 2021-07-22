@@ -227,6 +227,7 @@ def test_text_log_errors(client, test_job):
             'line_number': 101,
             'bug_suggestions': {
                 'search': 'failure 1',
+                'path_end': None,
                 'search_terms': ['failure 1'],
                 'bugs': {'open_recent': [], 'all_others': []},
                 'line_number': 101,
@@ -242,6 +243,7 @@ def test_text_log_errors(client, test_job):
             'line_number': 102,
             'bug_suggestions': {
                 'search': 'failure 2',
+                'path_end': None,
                 'search_terms': ['failure 2'],
                 'bugs': {'open_recent': [], 'all_others': []},
                 'line_number': 102,

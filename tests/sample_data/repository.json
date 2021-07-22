@@ -1,0 +1,142 @@
+[
+  {
+    "pk": 1,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "mozilla-central",
+      "url": "https://hg.mozilla.org/mozilla-central",
+      "active_status": "active",
+      "codebase": "gecko",
+      "repository_group": 1,
+      "life_cycle_order": 10,
+      "description": "",
+      "expire_performance_data": false,
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 4,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "try",
+      "url": "https://hg.mozilla.org/try",
+      "active_status": "active",
+      "codebase": "gecko",
+      "repository_group": 1,
+      "description": "",
+      "is_try_repo": true,
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 5,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "mozilla-aurora",
+      "url": "https://hg.mozilla.org/releases/mozilla-aurora",
+      "active_status": "onhold",
+      "codebase": "gecko",
+      "repository_group": 2,
+      "description": "",
+      "performance_alerts_enabled": true,
+      "expire_performance_data": false,
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 6,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "mozilla-beta",
+      "url": "https://hg.mozilla.org/releases/mozilla-beta",
+      "active_status": "active",
+      "codebase": "gecko",
+      "repository_group": 2,
+      "life_cycle_order": 100,
+      "description": "",
+      "performance_alerts_enabled": true,
+      "expire_performance_data": false,
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 7,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "mozilla-release",
+      "url": "https://hg.mozilla.org/releases/mozilla-release",
+      "active_status": "active",
+      "codebase": "gecko",
+      "repository_group": 2,
+      "life_cycle_order": 1000,
+      "description": "",
+      "performance_alerts_enabled": true,
+      "expire_performance_data": false,
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 8,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "mozilla-esr17",
+      "url": "https://hg.mozilla.org/releases/mozilla-esr17",
+      "active_status": "onhold",
+      "codebase": "gecko",
+      "repository_group": 2,
+      "description": "",
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 77,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "autoland",
+      "url": "https://hg.mozilla.org/integration/autoland",
+      "active_status": "active",
+      "codebase": "gecko",
+      "repository_group": 1,
+      "description": "The destination for automatically landed Firefox commits.",
+      "performance_alerts_enabled": true,
+      "expire_performance_data": false,
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 114,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "mozilla-esr78",
+      "url": "https://hg.mozilla.org/releases/mozilla-esr78",
+      "active_status": "active",
+      "codebase": "gecko",
+      "repository_group": 2,
+      "life_cycle_order": 10000,
+      "description": "",
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  },
+  {
+    "pk": 115,
+    "model": "model.repository",
+    "fields": {
+      "dvcs_type": "hg",
+      "name": "comm-esr78",
+      "url": "https://hg.mozilla.org/releases/comm-esr78",
+      "active_status": "active",
+      "codebase": "comm",
+      "repository_group": 8,
+      "description": "",
+      "tc_root_url": "https://firefox-ci-tc.services.mozilla.com"
+    }
+  }
+]

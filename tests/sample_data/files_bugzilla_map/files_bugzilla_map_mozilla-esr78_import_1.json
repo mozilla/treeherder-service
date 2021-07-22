@@ -1,0 +1,26 @@
+{
+  "otherfolder/AUTHORS": [
+    "mozilla.org",
+    "Different path, same product, different component"
+  ],
+  "browser/components/BrowserGlue.jsm": [
+    "Different product, same component",
+    "General"
+  ],
+  "mozilla-esr78-folder/file.new.here": [
+    "Mock Component",
+    "File only present in mozilla-esr78"
+  ],
+  "toolkit/mozilla-beta/fantasy_file.js": [
+    "Mock",
+    "File first seen on mozilla-beta"
+  ],
+  "testing/web-platform/meta/IndexedDB/historical.html.ini": [
+    "Testing",
+    "Different component for older project after missing for project between"
+  ],
+  "testing/web-platform/tests/IndexedDB/historical.html": [
+    "Core",
+    "DOM: Core & HTML"
+  ]
+}

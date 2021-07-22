@@ -23,9 +23,8 @@ import {
 import {
   bugzillaBugsApi,
   bzBaseUrl,
-  dxrBaseUrl,
+  bzComponentEndpoint,
   getApiUrl,
-  hgBaseUrl,
 } from '../helpers/url';
 import { create } from '../helpers/http';
 import { notify } from '../job-view/redux/stores/notifications';
@@ -170,7 +169,8 @@ export class BugFilerClass extends React.Component {
       isSecurityIssue: false,
       comment: '',
       searching: false,
-      parsedSummary,
+      // used by test
+      parsedSummary, // eslint-disable-line react/no-unused-state
       checkedLogLinks,
       thisFailure,
       keywords,
@@ -180,6 +180,7 @@ export class BugFilerClass extends React.Component {
 
   componentDidMount() {
     this.checkForSecurityIssue();
+    this.findProductByPath();
   }
 
   getUnhelpfulSummaryReason(summary) {
@@ -237,128 +238,68 @@ export class BugFilerClass extends React.Component {
    *  Attempt to find a good product/component for this failure
    */
   findProduct = async () => {
-    const { jobGroupName, notify } = this.props;
-    const { productSearch, parsedSummary } = this.state;
+    const { productSearch } = this.state;
 
-    let possibleFilename = null;
+    if (!productSearch) {
+      return;
+    }
+
     let suggestedProductsSet = new Set();
 
     this.setState({ searching: true });
 
-    if (productSearch) {
-      const resp = await fetch(
-        `${bzBaseUrl}rest/prod_comp_search/find/${productSearch}?limit=5`,
-      );
-      const data = await resp.json();
-      const products = data.products.filter(
-        (item) => !!item.product && !!item.component,
-      );
-      suggestedProductsSet = new Set([
-        ...suggestedProductsSet,
-        ...products.map(
-          (prod) =>
-            prod.product + (prod.component ? ` :: ${prod.component}` : ''),
-        ),
-      ]);
-    } else {
-      let failurePath = parsedSummary[0][0];
+    const resp = await fetch(
+      `${bzBaseUrl}rest/prod_comp_search/find/${productSearch}?limit=5`,
+    );
+    const data = await resp.json();
+    const products = data.products.filter(
+      (item) => !!item.product && !!item.component,
+    );
+    suggestedProductsSet = new Set([
+      ...suggestedProductsSet,
+      ...products.map(
+        (prod) =>
+          prod.product + (prod.component ? ` :: ${prod.component}` : ''),
+      ),
+    ]);
 
-      // If the "TEST-UNEXPECTED-foo" isn't one of the omitted ones, use the next piece in the summary
-      if (failurePath.includes('TEST-UNEXPECTED-')) {
-        // eslint-disable-next-line prefer-destructuring
-        failurePath = parsedSummary[0][1];
-      }
-      possibleFilename = findFilename(failurePath);
+    const newSuggestedProducts = [...suggestedProductsSet];
 
-      const lowerJobGroupName = jobGroupName.toLowerCase();
-      // Try to fix up file paths for some job types.
-      if (lowerJobGroupName.includes('spidermonkey')) {
-        failurePath = `js/src/tests/${failurePath}`;
-      }
-      if (lowerJobGroupName.includes('videopuppeteer ')) {
-        failurePath = failurePath.replace('FAIL ', '');
-        failurePath = `dom/media/test/external/external_media_tests/${failurePath}`;
-      }
-      if (lowerJobGroupName.includes('web platform')) {
-        failurePath = failurePath.startsWith('mozilla/tests')
-          ? `testing/web-platform/${failurePath}`
-          : `testing/web-platform/tests${failurePath}`;
-      }
+    this.setState({
+      suggestedProducts: newSuggestedProducts,
+      selectedProduct: newSuggestedProducts[0],
+      searching: false,
+    });
+  };
 
-      // Search mercurial's moz.build metadata to find products/components
-      fetch(
-        `${hgBaseUrl}mozilla-central/json-mozbuildinfo?p=${failurePath}`,
-      ).then((resp) =>
-        resp.json().then((firstRequest) => {
-          if (firstRequest.error) {
-            notify(
-              'Unable to infer product/component via metadata. Please manually search for a product.',
-            );
-          }
-          if (
-            firstRequest.data &&
-            firstRequest.data.aggregate &&
-            firstRequest.data.aggregate.recommended_bug_component
-          ) {
-            const suggested =
-              firstRequest.data.aggregate.recommended_bug_component;
-            suggestedProductsSet.add(`${suggested[0]} :: ${suggested[1]}`);
-          }
+  /*
+   *  Attempt to find the product/component for this failure based on the
+   *  file path or its end.
+   */
+  findProductByPath = async () => {
+    const { suggestion } = this.props;
+    const pathEnd = suggestion.path_end;
 
-          // Make an attempt to find the file path via a dxr file search
-          if (
-            suggestedProductsSet.size === 0 &&
-            possibleFilename &&
-            possibleFilename.length > 4
-          ) {
-            const dxrlink = `${dxrBaseUrl}mozilla-central/search?q=file:${possibleFilename}&redirect=false&limit=5`;
-            // Bug 1358328 - We need to override headers here until DXR returns JSON with the default Accept header
-            fetch(dxrlink, { headers: { Accept: 'application/json' } }).then(
-              (secondRequest) => {
-                const { results } = secondRequest.data;
-                let resultsCount = results.length;
-                // If the search returns too many results, this probably isn't a good search term, so bail
-                if (resultsCount === 0) {
-                  suggestedProductsSet = new Set([
-                    ...suggestedProductsSet,
-                    this.getSpecialProducts(failurePath),
-                  ]);
-                }
-                results.forEach((result) => {
-                  fetch(
-                    `${hgBaseUrl}mozilla-central/json-mozbuildinfo?p=${result.path}`,
-                  ).then((thirdRequest) => {
-                    if (
-                      thirdRequest.data.aggregate &&
-                      thirdRequest.data.aggregate.recommended_bug_component
-                    ) {
-                      const suggested =
-                        thirdRequest.data.aggregate.recommended_bug_component;
-                      suggestedProductsSet.add(
-                        `${suggested[0]} :: ${suggested[1]}`,
-                      );
-                    }
-                    // Only get rid of the throbber when all of these searches have completed
-                    resultsCount -= 1;
-                    if (resultsCount === 0) {
-                      suggestedProductsSet = new Set([
-                        ...suggestedProductsSet,
-                        this.getSpecialProducts(failurePath),
-                      ]);
-                    }
-                  });
-                });
-              },
-            );
-          } else {
-            suggestedProductsSet = new Set([
-              ...suggestedProductsSet,
-              this.getSpecialProducts(failurePath),
-            ]);
-          }
-        }),
-      );
+    if (!pathEnd) {
+      return;
     }
+
+    let suggestedProductsSet = new Set();
+
+    this.setState({ searching: true });
+
+    const resp = await fetch(
+      `/api${bzComponentEndpoint}?path=${encodeURIComponent(pathEnd)}`,
+    );
+    const data = await resp.json();
+    const products = data.filter((item) => !!item.product && !!item.component);
+    suggestedProductsSet = new Set([
+      ...suggestedProductsSet,
+      ...products.map(
+        (prod) =>
+          prod.product + (prod.component ? ` :: ${prod.component}` : ''),
+      ),
+    ]);
     const newSuggestedProducts = [...suggestedProductsSet];
 
     this.setState({

@@ -68,7 +68,9 @@ def bug_suggestions_line(err, term_cache=None):
     clean_line = get_cleaned_line(err.line)
 
     # get a meaningful search term out of the error line
-    search_term = get_error_search_term(clean_line)
+    search_info = get_error_search_term_and_path(clean_line)
+    search_term = search_info["search_term"]
+    path_end = search_info["path_end"]
     bugs = dict(open_recent=[], all_others=[])
 
     # collect open recent and all other bugs suggestions
@@ -94,6 +96,7 @@ def bug_suggestions_line(err, term_cache=None):
     return {
         "search": clean_line,
         "search_terms": search_terms,
+        "path_end": path_end,
         "bugs": bugs,
         "line_number": err.line_number,
     }
@@ -105,7 +108,7 @@ def get_cleaned_line(line):
     return PROCESS_ID_RE.sub('', line_to_clean)
 
 
-def get_error_search_term(error_line):
+def get_error_search_term_and_path(error_line):
     """
     Generate a search term from the given error_line string.
 
@@ -120,6 +123,7 @@ def get_error_search_term(error_line):
 
     tokens = error_line.split(" | ")
     search_term = None
+    path_end = None
 
     if len(tokens) >= 3:
         # it's in the "FAILURE-TYPE | testNameOrFilePath | message" type format.
@@ -133,11 +137,10 @@ def get_error_search_term(error_line):
         else:
             # For reftests, remove the reference path from the tokens as this is
             # not very unique
-            test_name_or_path = REFTEST_RE.sub("", test_name_or_path)
-            for splitter in ("/", "\\"):
-                # if this is a path, we are interested in the last part
-                test_name_or_path = test_name_or_path.split(splitter)[-1]
-            search_term = test_name_or_path
+            test_name_or_path = REFTEST_RE.sub("", test_name_or_path).replace("\\", "/")
+            path_end = test_name_or_path
+            # if this is a path, we are interested in the last part
+            search_term = test_name_or_path.split("/")[-1]
 
     # If the failure line was not in the pipe symbol delimited format or the search term
     # will likely return too many (or irrelevant) results (eg: too short or matches terms
@@ -148,6 +151,8 @@ def get_error_search_term(error_line):
             search_term = error_line
         else:
             search_term = None
+            if path_end and "/" not in path_end:
+                path_end = None
 
     # Searching for extremely long search terms is undesirable, since:
     # a) Bugzilla's max summary length is 256 characters, and once "Intermittent "
@@ -160,7 +165,10 @@ def get_error_search_term(error_line):
         search_term = re.sub(PREFIX_PATTERN, '', search_term)
         search_term = search_term[:100]
 
-    return search_term
+    return {
+        "search_term": search_term,
+        "path_end": path_end,
+    }
 
 
 def get_crash_signature(error_line):

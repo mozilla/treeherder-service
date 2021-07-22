@@ -104,6 +104,7 @@ class Repository(models.Model):
     codebase = models.CharField(max_length=50, blank=True, db_index=True)
     description = models.TextField(blank=True)
     active_status = models.CharField(max_length=7, blank=True, default='active', db_index=True)
+    life_cycle_order = models.PositiveIntegerField(null=True, default=None)
     performance_alerts_enabled = models.BooleanField(default=False)
     expire_performance_data = models.BooleanField(default=True)
     is_try_repo = models.BooleanField(default=False)
@@ -331,6 +332,32 @@ class Bugscache(models.Model):
             all_others = []
 
         return {"open_recent": open_recent, "all_others": all_others}
+
+
+class BugzillaComponent(models.Model):
+    product = models.CharField(max_length=60)
+    component = models.CharField(max_length=60)
+
+    class Meta:
+        db_table = 'bugzilla_component'
+        verbose_name_plural = 'bugzilla_components'
+        unique_together = ("product", "component")
+
+    def __str__(self):
+        return "{0} :: {1}".format(self.product, self.component)
+
+
+class FilesBugzillaMap(models.Model):
+    path = models.CharField(max_length=255, unique=True, db_index=True)
+    file_name = models.CharField(max_length=255, db_index=True)
+    bugzilla_component = models.ForeignKey('BugzillaComponent', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'file_bugzilla_component'
+        verbose_name_plural = 'files_bugzilla_components'
+
+    def __str__(self):
+        return "{0}".format(self.path)
 
 
 class Machine(NamedModel):

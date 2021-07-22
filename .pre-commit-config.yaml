@@ -1,4 +1,8 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: check-json
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.4
     hooks:
@@ -21,3 +25,17 @@ repos:
     hooks:
       - id: black
         language_version: python3.7
+  - repo: https://github.com/aerickson/urlchecker-python
+    rev: 9654184451d967d2f03d8cfe3b5333b6facbfa2e
+    hooks:
+      - id: urlchecker
+        entry: urlchecker check_ci --exclude-pattern "http://localhost"
+        types_or: [markdown, json]
+        exclude: |
+          (?x)^(
+              version.json|
+              package.json|
+              package-lock.json|
+              ^tests/.*|
+              ^node_modules/.*
+          )$

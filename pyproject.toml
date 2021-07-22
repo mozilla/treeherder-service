@@ -14,7 +14,7 @@ python = "^3.7"
 # A list of all of the optional dependencies, some of which are included in the
 # below `extras`. They can be opted into by apps.
 mkdocs = { version = "1.0.4", optional = true }
-mkdocs-material = { version = "4.6.3", optional = true }
+mkdocs-material = { version = "==7.2.0", optional = true }
 mdx_truly_sane_lists = { version = "1.2", optional = true }
 
 [tool.poetry.extras]

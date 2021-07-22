@@ -1,0 +1,67 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/requirements"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 99
+  reviewers:
+  - sarah-clements
+  labels:
+  - dependencies
+  - python
+  allow:
+  - dependency-name: django
+  ignore:
+  - dependency-name: jinja2
+    versions:
+    - 2.11.3
+  - dependency-name: taskcluster
+    versions:
+    - 41.0.0
+    - 41.0.1
+    - 41.0.2
+    - 41.1.0
+    - 42.1.0
+  - dependency-name: django-debug-toolbar
+    versions:
+    - "3.2"
+  - dependency-name: pre-commit
+    versions:
+    - 2.10.0
+    - 2.10.1
+    - 2.11.0
+  - dependency-name: django-cache-memoize
+    versions:
+    - 0.1.8
+  - dependency-name: aiohttp
+    versions:
+    - 3.7.4
+  - dependency-name: newrelic
+    versions:
+    - 6.0.1.155
+    - 6.2.0.156
+  - dependency-name: django
+    versions:
+    - 3.1.5
+    - 3.1.6
+    - 3.1.7
+  - dependency-name: django-extensions
+    versions:
+    - 3.1.1
+  - dependency-name: mozci
+    versions:
+    - 1.12.5
+    - 1.12.6
+  - dependency-name: django-cors-headers
+    versions:
+    - 3.7.0
+  - dependency-name: pyyaml
+    versions:
+    - 5.4.1
+  - dependency-name: pip-tools
+    versions:
+    - 5.5.0
+  - dependency-name: json-e
+    versions:
+    - 4.3.0

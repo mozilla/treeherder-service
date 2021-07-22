@@ -1,5 +1,0 @@
-# Our pip requirements files are kept under `requirements/`, however Heroku's
-# Python buildpack only looks for `<repo_root>/requirements.txt`, so we use
-# pip's include syntax to load the production dependencies file from here.
-
--r requirements/common.txt

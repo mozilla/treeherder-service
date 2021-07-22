@@ -777,38 +777,9 @@ def test_try_data_removal_errors_out_on_missing_try_data(try_repository):
         _ = try_removal_strategy.target_signatures
 
 
-@patch('treeherder.config.settings.SITE_HOSTNAME', 'treeherder-prototype2.herokuapp.com')
-@pytest.mark.parametrize('days', [None, 5, 30, 100])
-def test_explicit_days_validation_on_treeherder_prototype2_environment(days):
-    try:
-        _ = PerfherderCycler(10_000, 0, days=days)
-    except ValueError:
-        pytest.fail()
-
-    try:
-        _ = MainRemovalStrategy(10_000, days=days)
-    except ValueError:
-        pytest.fail()
-
-    try:
-        _ = TryDataRemoval(10_000, days=days)
-    except ValueError:
-        pytest.fail()
-
-    try:
-        _ = IrrelevantDataRemoval(10_000, days=days)
-    except ValueError:
-        pytest.fail()
-
-    try:
-        _ = StalledDataRemoval(10_000, days=days)
-    except ValueError:
-        pytest.fail()
-
-
 @patch('treeherder.config.settings.SITE_HOSTNAME', 'treeherder-production.com')
 @pytest.mark.parametrize('days', [5, 30, 100, 364])
-def test_explicit_days_validation_on_envs_other_than_treeherder_prototype2(days):
+def test_explicit_days_validation_on_all_envs(days):
     with pytest.raises(ValueError):
         _ = PerfherderCycler(10_000, 0, days=days)
 

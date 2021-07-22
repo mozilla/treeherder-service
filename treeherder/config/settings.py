@@ -82,7 +82,7 @@ INSTALLED_APPS = [
     'treeherder.changelog',
 ]
 
-# Docker/outside-of-Docker/CircleCI vs Heroku/Review-app
+# Docker/outside-of-Docker/CircleCI
 if DEBUG:
     NEW_RELIC_DEVELOPER_MODE = True
     # This controls whether the Django debug toolbar should be shown or not
@@ -93,12 +93,6 @@ if DEBUG:
     }
     INSTALLED_APPS.append('debug_toolbar')
     INSTALLED_APPS.append('django_extensions')
-
-# Heroku-review-app (defined in app.json)
-if env("HEROKU_REVIEW_APP", default=False):
-    SITE_URL = "https://{}.herokuapp.com".format(env("HEROKU_APP_NAME"))
-    SITE_HOSTNAME = furl(SITE_URL).host
-    ALLOWED_HOSTS = [SITE_HOSTNAME]
 
 # Middleware
 MIDDLEWARE = [
@@ -111,7 +105,7 @@ MIDDLEWARE = [
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'corsheaders.middleware.CorsMiddleware',
         # Allows both Django static files and those specified via `WHITENOISE_ROOT`
-        # to be served by WhiteNoise, avoiding the need for Apache/nginx on Heroku.
+        # to be served by WhiteNoise.
         'treeherder.middleware.CustomWhiteNoise',
         'django.middleware.gzip.GZipMiddleware',
         'debug_toolbar.middleware.DebugToolbarMiddleware' if DEBUG else False,
@@ -169,7 +163,6 @@ for alias in DATABASES:
 # Caches
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379')
 if connection_should_use_tls(REDIS_URL):
-    # Connect using TLS on Heroku.
     REDIS_URL = get_tls_redis_url(REDIS_URL)
 
 CACHES = {
@@ -358,7 +351,6 @@ CELERY_TASK_DEFAULT_QUEUE = 'default'
 
 # Make Celery defer the acknowledgment of a task until after the task has completed,
 # to prevent data loss in the case of celery master process crashes or infra failures.
-# https://devcenter.heroku.com/articles/celery-heroku#using-acks_late
 # http://docs.celeryproject.org/en/latest/userguide/tasks.html#Task.acks_late
 CELERY_TASK_ACKS_LATE = True
 

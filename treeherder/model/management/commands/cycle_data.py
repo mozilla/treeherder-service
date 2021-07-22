@@ -32,11 +32,7 @@ class Command(BaseCommand):
             action='store',
             dest='days',
             type=int,
-            help=(
-                "Data cycle interval expressed in days. "
-                "On Perfherder specifically, this only applies for `treeherder-prototype2` "
-                "environment; supplying it for other environments is illegal."
-            ),
+            help=("Data cycle interval expressed in days. This only applies to Treeherder"),
         )
         parser.add_argument(
             '--chunk-size',

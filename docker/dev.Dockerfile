@@ -1,4 +1,3 @@
-# Use the same Python version as in Heroku (see runtime.txt)
 FROM python:3.7.11
 
 # Variables that are not specific to a particular environment.
@@ -27,6 +26,5 @@ ADD . /app
 WORKDIR /app
 
 # Common and dev deps installed separately to prove that common.txt works standalone
-# (given that dev.txt is not installed on Heroku)
 RUN pip install --no-cache-dir --disable-pip-version-check --require-hashes -r requirements/common.txt
 RUN pip install --no-cache-dir --disable-pip-version-check --require-hashes -r requirements/dev.txt

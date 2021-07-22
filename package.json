@@ -101,7 +101,6 @@
     "codecov": "rm -rf coverage && node ./node_modules/codecov/bin/codecov",
     "format": "node ./node_modules/prettier/bin-prettier.js --write \"**/*.{css,html,js,jsx,json,md,yaml,yml}\"",
     "format:check": "node ./node_modules/prettier/bin-prettier.js --check \"**/*.{css,html,js,jsx,json,md,yaml,yml}\"",
-    "heroku-postbuild": "yarn build",
     "lint": "node ./node_modules/eslint/bin/eslint.js --report-unused-disable-directives --max-warnings 0 --format codeframe --ext js,jsx \".*.js\" \"*.js\" ui/ tests/ui/",
     "lint-with-cache": "node ./node_modules/eslint/bin/eslint.js --cache --report-unused-disable-directives --max-warnings 0 --format codeframe --ext js,jsx \".*.js\" \"*.js\" ui/ tests/ui/",
     "markdownlint": "npx markdownlint-cli -c .markdownlint.json -p .markdownlintignore .",

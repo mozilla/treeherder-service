@@ -22,8 +22,6 @@ def get_tls_redis_url(redis_url):
     Will convert 'redis://h:PASSWORD@INSTANCE.compute-1.amazonaws.com:8409'
           ...to: 'rediss://h:PASSWORD@INSTANCE.compute-1.amazonaws.com:8410?ssl_cert_reqs=none'
 
-    See:
-    https://devcenter.heroku.com/articles/securing-heroku-redis#connecting-directly-to-stunnel
     """
     url = furl(redis_url)
     url.port += 1

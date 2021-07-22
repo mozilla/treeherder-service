@@ -1,9 +1,0 @@
-# Files/directories to be excluded from the Heroku build, to reduce
-# the resultant slug size and thus speed up dyno deploys. See:
-# https://devcenter.heroku.com/articles/slug-compiler#ignoring-files-with-slugignore
-# Anything not committed to version control (for example `node_modules`)
-# is automatically excluded so does not need to be listed here.
-
-/docker/
-/docs/
-/tests/

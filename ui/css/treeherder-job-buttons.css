@@ -301,6 +301,7 @@ fieldset[disabled] .btn-red-classified.active {
 .btn-dkblue-count:hover,
 .btn-dkblue-classified-count:hover {
   color: #283aa2;
+  font-weight: bold;
 }
 .btn-dkblue:hover,
 .btn-dkblue-classified:hover,

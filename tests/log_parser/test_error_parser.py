@@ -33,6 +33,8 @@ ERROR_TEST_CASES = (
     "00:55:13 INFO - SUMMARY: AddressSanitizer: 64 byte(s) leaked in 1 allocation(s).",
     # "SUMMARY: ThreadSanitizer"
     "INFO - GECKO(2552) | SUMMARY: ThreadSanitizer: data race /builds/worker/checkouts/gecko/js/src/gc/Cell.h:572:21 in lengthField",
+    # "SUMMARY: UndefinedBehaviorSanitizer"
+    "04:48:03     INFO -  [webrender 0.61.0] SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior glsl-optimizer/src/compiler/glsl/glcpp/pp.c:198:28 in",
     # "ThreadSanitizer: nested bug"
     "19:34:37     INFO - GECKO(2516) | ThreadSanitizer: nested bug in the same thread, aborting.",
     # "Automation Error:"

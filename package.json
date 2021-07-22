@@ -22,7 +22,7 @@
     "@types/prop-types": "*",
     "@types/react": "*",
     "@types/react-dom": "*",
-    "ajv": "6.12.6",
+    "ajv": "8.6.2",
     "auth0-js": "9.13.4",
     "connected-react-router": "6.8.0",
     "fuse.js": "6.0.4",

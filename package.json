@@ -91,7 +91,7 @@
     "markdownlint-cli": "0.23.2",
     "path": "^0.12.7",
     "prettier": "2.0.5",
-    "puppeteer": "^8.0.0",
+    "puppeteer": "10.1.0",
     "setup-polly-jest": "^0.9.1",
     "webpack-dev-server": "3.11.2"
   },
